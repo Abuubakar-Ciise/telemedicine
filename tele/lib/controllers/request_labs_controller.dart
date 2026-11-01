@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:tele/controllers/labs_requested_controller.dart';
 import 'package:tele/services/new_firebase_send_message.dart';
 import 'package:tele/services/post_api_services.dart';

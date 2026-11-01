@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:tele/Models/patient_appointements_model.dart';
 import 'package:tele/services/get_api_services.dart';
 

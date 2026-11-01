@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tele/theme/app_theme.dart';
 import 'package:get/get.dart' hide Trans;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:tele/Models/notifications_model.dart';
@@ -250,7 +251,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
     if (t.contains("lab request") || t.contains("lab test") || t.contains("lab result")) return Colors.purple;
     if (t.contains("appointment") || t.contains("schedule") || t.contains("booking")) return Colors.blue;
-    if (t.contains("prescription") || t.contains("medication")) return Colors.teal;
+    if (t.contains("prescription") || t.contains("medication")) return AppColors.brand;
     if (t.contains("video call") || t.contains("video consultation")) return Colors.deepOrange;
     if (t.contains("message") || t.contains("chat") || t.contains("conversation")) return Colors.green;
     if (t.contains("payment") || t.contains("billing") || t.contains("invoice")) return Colors.brown;

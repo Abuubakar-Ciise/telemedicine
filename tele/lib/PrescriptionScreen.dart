@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:tele/Models/doctor_prescriptions_model.dart';
 import 'package:tele/PrescriptionDetailScreen.dart';
 import 'package:tele/controllers/doctor_prescription_controller.dart';
 import 'package:tele/services/StorageService.dart';

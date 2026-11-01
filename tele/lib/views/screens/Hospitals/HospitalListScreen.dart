@@ -3,7 +3,6 @@ import 'package:get/get.dart' hide Trans;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:tele/Models/doctors_list_nodel.dart';
 import 'package:tele/controllers/HospitalController.dart';
-import 'package:tele/controllers/doctor_list_controller.dart';
 import 'package:tele/controllers/specialist_controller.dart';
 import 'package:tele/views/screens/components/config.dart';
 import 'package:tele/views/screens/components/doctor_card.dart';

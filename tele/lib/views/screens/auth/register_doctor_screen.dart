@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tele/services/username_helper.dart';
 import 'package:get/get.dart';
 import 'package:tele/Models/hospital_model.dart';
 import 'package:tele/Models/specialist_model.dart';
@@ -43,13 +44,6 @@ class _RegisterDoctorScreenState extends State<RegisterDoctorScreen> {
     _specialistFuture = ApiGetServices().fetchSpecialist();
     _hospitalFuture = ApiGetServices().fetchHospitals();
 
-    // Listen to name changes to auto-generate username
-    nameController.addListener(() {
-      // Convert name to lowercase and remove spaces for username
-      String username = nameController.text.toLowerCase().replaceAll(' ', '');
-      // You don't need to store this in a controller since it's derived from the name
-      print("Generated username: $username");
-    });
   }
 
   @override
@@ -219,8 +213,8 @@ class _RegisterDoctorScreenState extends State<RegisterDoctorScreen> {
                                   return;
                                 }
 
-                                // Generate username from name
-                                String username = nameController.text.toLowerCase().replaceAll(' ', '');
+                                // Username is generated from the name with a unique ending
+                                String username = generateUsername(nameController.text);
 
                                 final response = await doctorController.registerDoctor(
                                   name: nameController.text.trim(),
@@ -238,7 +232,7 @@ class _RegisterDoctorScreenState extends State<RegisterDoctorScreen> {
 
                                 if (response["success"] == true) {
                                   Get.snackbar("Success", response["message"]);
-                                  Get.to(() => LoginScreen());
+                                  Get.offAll(() => LoginScreen());
                                 } else {
                                   Get.snackbar("Error", response["message"]);
                                 }
@@ -266,10 +260,14 @@ class _RegisterDoctorScreenState extends State<RegisterDoctorScreen> {
                             ),
                             TextButton(
                               onPressed: () {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => RegisterScreen()),
-                                );
+                                if (Navigator.canPop(context)) {
+                                  Navigator.pop(context);
+                                } else {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => RegisterScreen()),
+                                  );
+                                }
                               },
                               style: TextButton.styleFrom(
                                 padding: EdgeInsets.symmetric(horizontal: 8),

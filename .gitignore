@@ -1,0 +1,6 @@
+# Admin dashboard is kept out of this repository for now
+dashboard/
+
+# OS / editor
+.DS_Store
+Thumbs.db

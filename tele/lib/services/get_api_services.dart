@@ -11,16 +11,14 @@ import 'package:tele/Models/hospital_model.dart';
 import 'package:tele/Models/lab_report_model.dart';
 import 'package:tele/Models/lab_request_Model.dart';
 import 'package:tele/Models/patient_appointements_model.dart';
-import 'package:tele/Models/notifications_model.dart';
 import 'package:tele/Models/self_managment_models.dart';
 import 'package:tele/Models/shift_model.dart';
 import 'package:tele/Models/specialist_model.dart';
 import 'package:tele/Models/transection_model.dart';
-import 'package:tele/services/StorageService.dart';
 import 'package:tele/views/screens/components/config.dart';
 
 class ApiGetServices {
-  static final url = Config.baseUrl;
+  static String get url => Config.baseUrl;
 
   // get List of Hospitals
   Future<List<Hospital>> fetchHospitals() async {
@@ -401,8 +399,8 @@ class ApiGetServices {
 
   static Future<void> updateFcmToken(String userId) async {
     final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-    final String? token = await _firebaseMessaging.getToken();
     try {
+      final String? token = await _firebaseMessaging.getToken().timeout(const Duration(seconds: 15));
       if (token != null) {
         final response = await http.post(
           Uri.parse('$url/update_token'),

@@ -79,7 +79,7 @@ class _ShiftAppointmentScreenState extends State<ShiftAppointmentScreen> {
       title: Text('Error'.tr() ),
       description: Text(test['message']),
       autoCloseDuration: const Duration(seconds: 3),
-      // animationDuration: const Duration(microseconds: 300),
+      // animationDuration: const Duration(milliseconds: 300),
       alignment: Alignment.topRight,
       showProgressBar: true,
     );
@@ -93,7 +93,7 @@ class _ShiftAppointmentScreenState extends State<ShiftAppointmentScreen> {
     //   title: Text(test['success'] ? 'Success' : 'Hmmmmm'),
     //   description: Text(test['message']),
     //   autoCloseDuration: const Duration(seconds: 3),
-    //   // animationDuration: const Duration(microseconds: 300),
+    //   // animationDuration: const Duration(milliseconds: 300),
     //   alignment: Alignment.topRight,
     //   showProgressBar: true,
     // );

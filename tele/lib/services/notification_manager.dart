@@ -50,7 +50,7 @@ class NotificationManager {
 
   // Cancel specific notification
   static Future<void> cancelNotification(int id) async {
-    await _plugin.cancel(id);
+    await _plugin.cancel(id: id);
     await removeActiveNotification(id);
   }
 }

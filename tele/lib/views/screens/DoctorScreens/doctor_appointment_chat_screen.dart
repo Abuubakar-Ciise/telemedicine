@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:tele/services/call_session.dart';
+import 'package:tele/theme/app_theme.dart';
 import 'package:get/get.dart' hide Trans;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:intl/intl.dart';
@@ -185,7 +187,7 @@ class _DoctorAppointmentChatScreenState
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.teal),
+            icon: const Icon(Icons.arrow_back, color: AppColors.brand),
             onPressed: () => Navigator.pop(context),
           ),
           AnimatedContainer(
@@ -240,50 +242,12 @@ class _DoctorAppointmentChatScreenState
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.call, color: Colors.teal),
-            onPressed: () async {
-              final roomId = "call_${DateTime.now().millisecondsSinceEpoch}";
-              await FirebaseApis().sendCallFCM(
-                widget.patientToken,
-                widget.doctorName,
-                roomId,
-                widget.doctorPhone,
-                widget.patientProfile,
-                '0',
-                widget.doctorToken,
-                widget.patientToken,
-                widget.doctorId,
-                widget.patientId,
-              );
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => CallPage(callId: roomId, callType: '0')),
-              );
-            },
+            icon: const Icon(Icons.call, color: AppColors.brand),
+            onPressed: () => _startCall('0'),
           ),
           IconButton(
-            icon: const Icon(Icons.videocam, color: Colors.teal),
-            onPressed: () async {
-              final roomId = "call_${DateTime.now().millisecondsSinceEpoch}";
-              await FirebaseApis().sendCallFCM(
-                widget.patientToken,
-                widget.doctorName,
-                roomId,
-                widget.doctorPhone,
-                widget.patientProfile,
-                '1',
-                widget.doctorToken,
-                widget.patientToken,
-                widget.doctorId,
-                widget.patientId,
-              );
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => CallPage(callId: roomId, callType: '1')),
-              );
-            },
+            icon: const Icon(Icons.videocam, color: AppColors.brand),
+            onPressed: () => _startCall('1'),
           ),
         ],
       ),
@@ -744,7 +708,7 @@ class _DoctorAppointmentChatScreenState
         //         // _addLabs();
         //       },
         //       style: ElevatedButton.styleFrom(
-        //         backgroundColor: Colors.teal,
+        //         backgroundColor: AppColors.brand,
         //         padding: const EdgeInsets.symmetric(vertical: 14),
         //         shape: RoundedRectangleBorder(
         //           borderRadius: BorderRadius.circular(12),
@@ -759,6 +723,60 @@ class _DoctorAppointmentChatScreenState
     );
   }
 
+  /// Rings the patient, then opens the call. If the patient's phone can't be
+  /// reached, explain why instead of opening an empty call.
+  Future<void> _startCall(String callType) async {
+    final roomId = "call_${DateTime.now().millisecondsSinceEpoch}";
+    // Track the call on the server first (decline / cancel / missed work even without push)
+    await CallSession.start(
+      roomId: roomId,
+      doctorId: widget.doctorId,
+      patientId: widget.patientId,
+      callType: callType,
+      callerType: 'doctor',
+    );
+    final result = await FirebaseApis().sendCallFCM(
+      widget.patientToken,
+      widget.doctorName,
+      roomId,
+      widget.doctorPhone,
+      widget.patientProfile,
+      callType,
+      widget.doctorToken,
+      widget.patientToken,
+      widget.doctorId,
+      widget.patientId,
+      calleeType: 'patient',
+      calleeId: widget.patientId,
+    );
+    if (!mounted) return;
+    if (!result.delivered) {
+      // Push can't reach the patient's phone right now (closed app / no Google
+      // services). Still call: the patient's app shows the call when it's open.
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("The patient's phone can't get notifications right now. "
+            "They will see your call if the Tayo app is open."),
+        duration: Duration(seconds: 5),
+      ));
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CallPage(
+          callId: roomId,
+          callType: callType,
+          peerName: widget.patientName,
+          peerPicture: widget.patientProfile,
+          isCaller: true,
+          calleeType: 'patient',
+          calleeId: widget.patientId,
+          doctorId: widget.doctorId,
+          patientId: widget.patientId,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -770,7 +788,7 @@ class _DoctorAppointmentChatScreenState
             children: [
               _buildHeader(),
                TabBar(
-                labelColor: Colors.teal,
+                labelColor: AppColors.brand,
                 unselectedLabelColor: Colors.grey,
                 indicatorColor: Colors.green,
                 tabs: [

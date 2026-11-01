@@ -1,7 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_callkit_incoming_yoer/flutter_callkit_incoming.dart';
-import 'package:flutter_callkit_incoming_yoer/entities/entities.dart';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+import 'package:flutter_callkit_incoming/entities/entities.dart';
 import 'package:uuid/uuid.dart';
 import 'package:tele/views/screens/components/config.dart';
 
@@ -14,6 +14,7 @@ class BackgroundCallHandler {
 
   @pragma('vm:entry-point')
   static Future<void> handleBackgroundCall(RemoteMessage message) async {
+    await Config.ensureLoaded();
     try {
       // Initialize Firebase if not already initialized
       try {
@@ -23,14 +24,7 @@ class BackgroundCallHandler {
       } catch (e) {
         // Firebase not initialized, initialize it
         print('🔔 Initializing Firebase for background handler');
-        await Firebase.initializeApp(
-          options: FirebaseOptions(
-            apiKey: Config.firebaseapkey,
-            appId: Config.firebaseappid,
-            messagingSenderId: Config.firebasemessagingsenderid,
-            projectId: Config.firebaseprojectid,
-          ),
-        );
+        await Firebase.initializeApp(options: Config.firebaseOptions);
         print('🔔 Firebase initialized successfully');
       }
 

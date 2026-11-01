@@ -1,0 +1,17 @@
+# Node modules
+node_modules/
+
+# Environment files
+.env
+*.env
+
+# Credentials / keys
+serviceAccountKey.json
+#uploaded files
+uploads/
+data/
+config/data/
+
+# OS / editor
+.DS_Store
+.vscode/

@@ -1,3 +1,4 @@
+import 'package:tele/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -119,7 +120,7 @@ class ContactUsScreen extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(15),
-      splashColor: Colors.teal.withOpacity(0.2),
+      splashColor: AppColors.brand.withOpacity(0.2),
       child: Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(

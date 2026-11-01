@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide Trans;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:tele/controllers/appoinments_controller.dart';
 import 'package:tele/controllers/labs_controller.dart';
 import 'package:toastification/toastification.dart';
 

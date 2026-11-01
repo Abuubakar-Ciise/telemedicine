@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide Trans;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:tele/controllers/appoinments_controller.dart';
-import 'package:tele/controllers/doctor_appointment_controller.dart';
 import 'package:tele/services/StorageService.dart';
-import 'package:tele/views/screens/components/docotor_appointment_card.dart';
 import 'package:tele/views/screens/components/patient_appointment_card.dart';
 import 'package:tele/views/screens/loading_message_screen.dart';
 

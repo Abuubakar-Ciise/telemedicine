@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart' hide Trans;
 import 'package:easy_localization/easy_localization.dart';
-import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:tele/Models/doctors_list_nodel.dart';
+import 'package:tele/controllers/appoinments_controller.dart';
 import 'package:tele/controllers/payment_controller.dart';
 import 'package:tele/services/new_firebase_send_message.dart';
 import 'package:tele/services/post_api_services.dart';
 import 'package:tele/views/screens/PaymentStatusScreen.dart';
 import 'package:tele/views/screens/components/config.dart';
 import 'package:tele/views/screens/loading_message_screen.dart';
+import 'package:tele/views/screens/main_screen.dart';
 
 class ConfirmationScreen extends StatelessWidget {
   final Map<String, String> patientData;
@@ -216,6 +217,17 @@ class ConfirmationScreen extends StatelessWidget {
     );
   }
 
+  void _showResult(bool success, String message) {
+    Get.to(
+      () => PaymentStatusScreen(
+        isSuccess: success,
+        paymentStatus: success ? message : '',
+        errorMessage: success ? '' : message,
+      ),
+      transition: Transition.fadeIn,
+    );
+  }
+
   Widget _buildPayButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
@@ -228,50 +240,62 @@ class ConfirmationScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 14),
         ),
         onPressed: () async {
-          final String title = 'New Appointment'.tr();
-          final String body = "You have a new booking from ${patientData['name']} on $selectedDate at $selectedTime.".tr();
-          await paymentController.pay(
-              phone: patientData['phone']!,
-              amount: doctor.consultationfee,
-              merchantUid: maer,
-              apiUserId: api,
-              apiKey: apikey);
-              await NewFirebaseSendMessage().sendAppointmentNotificationToDoctor(
-              doctor.doctorToken,
-              title: title,
-              body: body,
-            );
-            await ApiPostServices()
-          .saveNotifcation(title, body, doctor.id, '');
-          if (paymentController.isPaymentSuccessful.value) {
-            await paymentController.bookAndPayController(
+          // 1. A time slot is required
+          final shiftId = shifId ?? '';
+          if (shiftId.isEmpty) {
+            _showResult(false, 'Please choose a time slot before paying.');
+            return;
+          }
+          try {
+            // 2. Payment (mock until real WaafiPay keys are configured)
+            await paymentController.pay(
+                phone: patientData['phone'] ?? '',
+                amount: doctor.consultationfee,
+                merchantUid: maer,
+                apiUserId: api,
+                apiKey: apikey);
+            if (!paymentController.isPaymentSuccessful.value) {
+              _showResult(false, paymentController.errorMessage.value);
+              return;
+            }
+
+            // 3. Save the payment + appointment on the server
+            final booking = await paymentController.bookAndPayController(
                 doctor.id,
                 patientId,
-                shifId!,
-                patientData['phone']!,
+                shiftId,
+                patientData['phone'] ?? '',
                 doctor.phone,
                 doctor.consultationfee,
-                // 0.01,
                 selectedDate,
-                patientData['problem']!);
-            Get.to(
-              () => PaymentStatusScreen(
-                isSuccess: true,
-                paymentStatus: paymentController.paymentStatus.value,
-                errorMessage: '',
-              ),
-              transition: Transition.fadeIn,
-            );
-            
-          } else {
-            Get.to(
-              () => PaymentStatusScreen(
-                isSuccess: false,
-                paymentStatus: '',
-                errorMessage: paymentController.errorMessage.value,
-              ),
-              transition: Transition.fadeIn,
-            );
+                patientData['problem'] ?? '');
+            if (booking['success'] != true) {
+              _showResult(false, 'Payment went through but the appointment was not saved: ${booking['message']}');
+              return;
+            }
+
+            // 4. Tell the doctor (a failed notification must not undo the booking)
+            final String title = 'New Appointment'.tr();
+            final String body = "You have a new booking from ${patientData['name']} on $selectedDate at $selectedTime.".tr();
+            try {
+              await NewFirebaseSendMessage().sendAppointmentNotificationToDoctor(
+                doctor.doctorToken,
+                title: title,
+                body: body,
+              );
+              await ApiPostServices().saveNotifcation(title, body, doctor.id, '');
+            } catch (e) {
+              debugPrint('⚠️ Booking saved, but notifying the doctor failed: $e');
+            }
+
+            // 5. Refresh the patient's appointment list and show the result
+            if (Get.isRegistered<AppoinmentsController>()) {
+              Get.find<AppoinmentsController>().fechtAppointments(patientId);
+            }
+            Get.offAll(() => MainScreen());
+            _showResult(true, paymentController.paymentStatus.value);
+          } catch (e) {
+            _showResult(false, 'Booking failed: $e');
           }
         },
         child: Text(

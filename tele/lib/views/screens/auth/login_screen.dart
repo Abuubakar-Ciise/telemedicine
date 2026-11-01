@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:tele/controllers/auth_controller.dart';
 import 'package:tele/views/screens/auth/forget_password.dart';
 import 'package:tele/views/screens/auth/register_screen.dart';
+import 'package:tele/views/screens/components/server_settings_dialog.dart';
 import 'package:tele/views/screens/loading_message_screen.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -107,20 +108,30 @@ class LoginScreen extends StatelessWidget {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor:
                                           const Color.fromARGB(255, 9, 130, 13),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 144, vertical: 15),
+                                      // Full-width button that fits any screen size
+                                      minimumSize: const Size(double.infinity, 52),
+                                      padding: const EdgeInsets.symmetric(vertical: 15),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                     ),
                                     onPressed: () async {
                                       if (_formKey.currentState!.validate()) {
-                                        final token = await _firebaseMessaging.getToken();
+                                        // Push token is optional: log in even if Firebase is unavailable
+                                        String token = '';
+                                        try {
+                                          token = await _firebaseMessaging
+                                                  .getToken()
+                                                  .timeout(const Duration(seconds: 8)) ??
+                                              '';
+                                        } catch (e) {
+                                          debugPrint('⚠️ No FCM token at login: $e');
+                                        }
                                         await authController
                                             .loginDoctorAndPatient(
                                                 _emailController.text.trim(),
                                                 _passwordController.text
-                                                    .trim(),token!);
+                                                    .trim(),token);
                                         
                                       }
                                     },
@@ -146,7 +157,7 @@ class LoginScreen extends StatelessWidget {
                           Text("dont_have_account".tr()),
                           TextButton(
                             onPressed: () {
-                              Navigator.pushReplacement(
+                              Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => RegisterScreen()),
@@ -186,6 +197,17 @@ class LoginScreen extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+
+          // Server settings (change the API address without rebuilding)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            right: 8,
+            child: IconButton(
+              tooltip: 'Server settings',
+              icon: const Icon(Icons.settings_ethernet, color: Colors.white),
+              onPressed: () => showServerSettingsDialog(context),
+            ),
           ),
         ],
       ),

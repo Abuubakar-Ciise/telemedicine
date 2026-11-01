@@ -8,7 +8,6 @@ import 'package:tele/Models/doctor_prescriptions_model.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:toastification/toastification.dart';
 import 'package:pdf/pdf.dart';
-import 'package:open_file/open_file.dart';
 
 class PrescriptionDetailScreen extends StatelessWidget {
   final DoctorPrescriptionModel prescription;

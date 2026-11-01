@@ -1,0 +1,37 @@
+{
+  "name": "telemedicine-backend",
+  "version": "2.0.0",
+  "description": "Telemedicine Somalia REST API for the mobile app",
+  "main": "index.js",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "create-admin": "node scripts/create-admin.js",
+    "seed:admins": "node scripts/seed-admins.js"
+  },
+  "author": "Abdirahim Yusuf",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.13.0",
+    "bcryptjs": "^3.0.2",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0",
+    "google-auth-library": "^10.4.0",
+    "jsonwebtoken": "^9.0.3",
+    "moment-timezone": "^0.6.0",
+    "mongoose": "^8.19.0",
+    "multer": "^2.0.2",
+    "nanoid": "^3.3.11",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^10.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

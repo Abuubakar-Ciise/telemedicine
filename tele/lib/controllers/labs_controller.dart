@@ -1,7 +1,6 @@
 // controllers/labs_controller.dart
 import 'dart:io';
 import 'package:get/get.dart';
-import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:tele/controllers/labs_report_controller.dart';
 import 'package:tele/services/StorageService.dart';
 import 'package:tele/services/new_firebase_send_message.dart';

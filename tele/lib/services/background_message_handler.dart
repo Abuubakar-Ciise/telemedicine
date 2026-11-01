@@ -1,15 +1,21 @@
 // background_message_handler.dart
 
+import 'dart:async';
 import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_callkit_incoming_yoer/flutter_callkit_incoming.dart';
-import 'package:flutter_callkit_incoming_yoer/entities/entities.dart';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+import 'package:flutter_callkit_incoming/entities/entities.dart';
 import 'package:uuid/uuid.dart';
 import 'package:tele/services/background_call_handler.dart';
+import 'package:tele/services/call_session.dart';
+import 'package:tele/services/firebase_api.dart';
+import 'package:tele/views/screens/components/config.dart';
+import 'package:tele/views/screens/CallPage/call_helpers.dart';
 
 @pragma('vm:entry-point')
 Future<void> handleBackgroundMessage(RemoteMessage message) async {
+  await Config.ensureLoaded();
   try {
     print('🔔 Background message received: ${message.messageId}');
     print('🔔 Background message data: ${message.data}');
@@ -43,39 +49,53 @@ Future<void> handleBackgroundMessage(RemoteMessage message) async {
 Future<void> _showBackgroundCallKitDirect(Map<String, dynamic> data) async {
   try {
     final uuid = const Uuid().v4();
-
-    final picture = data['picture'] ?? '';
-    final avatarUrl = picture.startsWith('http')
-        ? picture
-        : picture.isNotEmpty
-            ? 'https://api.tayohealthcare.com/$picture'
-            : '';
-
-    final params = CallKitParams(
+    final params = buildIncomingCallParams(
       id: uuid,
-      nameCaller: data['callerName'] ?? 'Unknown Caller',
-      appName: 'Tayo healthcare',
-      avatar: avatarUrl,
-      handle: data['callerPhone'] ?? '',
-      type: int.tryParse(data['callType'] ?? '0') ?? 0,
-      duration: 30000,
-      textAccept: 'Accept',
-      textDecline: 'Decline',
+      callerName: data['callerName'] ?? '',
+      picture: data['picture'] ?? '',
+      callerPhone: data['callerPhone'] ?? '',
+      callType: data['callType'] ?? '0',
       extra: {
         'roomId': data['roomId'] ?? '',
         'callerToken': data['callerToken'] ?? '',
         'calleeToken': data['calleeToken'] ?? '',
         'callType': data['callType'] ?? '0',
+        'callerType': data['callerType'] ?? 'doctor',
         'doctor_id': data['doctor_id'] ?? '',
         'patient_id': data['patient_id'] ?? '',
         'isIncoming': 'true',
         'isCaller': 'false',
       },
-      headers: <String, dynamic>{'apiKey': 'Abc@123'},
     );
 
     await FlutterCallkitIncoming.showCallkitIncoming(params);
     print('🔔 Background CallKit shown successfully with ID: $uuid');
+
+    // The app may be closed: report Decline / time-out from here, so the
+    // caller's screen closes (it checks the call status every 2 s).
+    final roomId = (data['roomId'] ?? '').toString();
+    StreamSubscription? sub;
+    sub = FlutterCallkitIncoming.onEvent.listen((event) {
+      if (event == null || event.body['id'] != uuid) return;
+      if (event.event == Event.actionCallDecline) {
+        CallSession.update(roomId, 'declined');
+        final callerType = (data['callerType'] ?? 'doctor').toString();
+        FirebaseApis().sendCallEndTo(
+          toType: callerType,
+          toId: (callerType == 'doctor' ? data['doctor_id'] : data['patient_id'] ?? '').toString(),
+          doctorId: (data['doctor_id'] ?? '').toString(),
+          patientId: (data['patient_id'] ?? '').toString(),
+          roomId: roomId,
+        );
+        sub?.cancel();
+      } else if (event.event == Event.actionCallTimeout) {
+        CallSession.update(roomId, 'missed');
+        sub?.cancel();
+      } else if (event.event == Event.actionCallAccept || event.event == Event.actionCallEnded) {
+        sub?.cancel();
+      }
+    });
+    Future.delayed(const Duration(seconds: 60), () => sub?.cancel());
   } catch (e) {
     print('❌ Error showing background CallKit: $e');
   }
@@ -130,10 +150,10 @@ Future<void> _showBackgroundNotification(RemoteMessage message) async {
         'You have a new notification';
 
     await flutterLocalNotificationsPlugin.show(
-      message.hashCode,
-      title,
-      body,
-      platformChannelSpecifics,
+      id: message.hashCode,
+      title: title,
+      body: body,
+      notificationDetails: platformChannelSpecifics,
       payload: jsonEncode(message.data),
     );
 

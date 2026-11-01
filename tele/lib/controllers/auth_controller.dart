@@ -25,13 +25,13 @@ class AuthController extends GetxController {
           name, email, address, gender, age, phone, username, password);
       if (response['success']) {
         Get.snackbar("Success", "Account created! Please login.");
-        Get.to(() => LoginScreen());
+        Get.offAll(() => LoginScreen());
       } else {
         Get.snackbar(
             "Error", response['message'] ?? "An unknown error occurred");
       }
     } catch (e) {
-      Get.snackbar("Error", "Something went wrong!");
+      Get.snackbar("Error", "Could not create the account: $e");
     } finally {
       isLoading.value = false;
     }
@@ -53,7 +53,7 @@ class AuthController extends GetxController {
           title: Text('Success'),
           description: Text(response['message']),
           autoCloseDuration: const Duration(seconds: 3),
-          animationDuration: const Duration(microseconds: 300),
+          animationDuration: const Duration(milliseconds: 300),
           alignment: Alignment.topRight,
           showProgressBar: true,
         );
@@ -82,7 +82,7 @@ class AuthController extends GetxController {
           title: Text('Error'),
           description: Text(response['message']),
           autoCloseDuration: const Duration(seconds: 3),
-          animationDuration: const Duration(microseconds: 300),
+          animationDuration: const Duration(milliseconds: 300),
           alignment: Alignment.topRight,
           showProgressBar: true,
         );
@@ -91,10 +91,10 @@ class AuthController extends GetxController {
       toastification.show(
         type: ToastificationType.warning,
         style: ToastificationStyle.flat,
-        title: Text('Warning'),
-        description: Text("Something went wrong!"),
+        title: Text('Login failed'),
+        description: Text('Could not log in: $e'),
         autoCloseDuration: const Duration(seconds: 3),
-        animationDuration: const Duration(microseconds: 300),
+        animationDuration: const Duration(milliseconds: 300),
         alignment: Alignment.topRight,
         showProgressBar: true,
       );

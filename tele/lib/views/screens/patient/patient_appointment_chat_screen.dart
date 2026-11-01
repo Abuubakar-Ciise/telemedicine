@@ -1,5 +1,5 @@
-import 'dart:ffi';
 import 'package:flutter/material.dart';
+import 'package:tele/theme/app_theme.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart' hide Trans;
 import 'package:easy_localization/easy_localization.dart';
@@ -10,8 +10,6 @@ import 'package:tele/controllers/doctor_prescription_controller.dart';
 import 'package:tele/controllers/labs_report_controller.dart';
 import 'package:tele/controllers/labs_requested_controller.dart';
 import 'package:tele/services/StorageService.dart';
-import 'package:tele/services/firebase_api.dart';
-import 'package:tele/views/screens/CallPage/call_page.dart';
 import 'package:tele/views/screens/components/config.dart';
 import 'package:tele/views/screens/loading_message_screen.dart';
 import 'package:tele/views/screens/patient/LabReportViewerScreen.dart';
@@ -206,7 +204,7 @@ class _PatientAppointmentChatScreenState
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.teal),
+            icon: const Icon(Icons.arrow_back, color: AppColors.brand),
             onPressed: () => Navigator.pop(context),
             tooltip: 'Back',
           ),
@@ -281,7 +279,7 @@ class _PatientAppointmentChatScreenState
                   child: Icon(
                     Icons.call,
                     size: 28,
-                    color: Colors.teal.withOpacity(0.4),
+                    color: AppColors.brand.withOpacity(0.4),
                   ),
                 ),
               ),
@@ -300,7 +298,7 @@ class _PatientAppointmentChatScreenState
                   child: Icon(
                     Icons.videocam,
                     size: 28,
-                    color: Colors.teal.withOpacity(0.4),
+                    color: AppColors.brand.withOpacity(0.4),
                   ),
                 ),
               ),
@@ -812,7 +810,7 @@ class _PatientAppointmentChatScreenState
             children: [
               _buildHeader(),
                TabBar(
-                labelColor: Colors.teal,
+                labelColor: AppColors.brand,
                 unselectedLabelColor: Colors.grey,
                 indicatorColor: Colors.green,
                 tabs: [

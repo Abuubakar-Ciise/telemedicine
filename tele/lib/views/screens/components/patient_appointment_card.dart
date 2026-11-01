@@ -3,10 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:tele/controllers/doctor_list_controller.dart';
 import 'package:tele/controllers/re_appointment_controller.dart';
-import 'package:tele/views/screens/DoctorScreens/ReAppointmentScreen.dart';
-import 'package:tele/views/screens/DoctorScreens/doctor_appointment_chat_screen.dart';
 import 'package:tele/views/screens/components/config.dart';
-import 'package:tele/views/screens/patient/ReviewsScreen.dart';
 import 'package:tele/views/screens/patient/patient_appointment_chat_screen.dart';
 
 class PatientAppointmentCard extends StatelessWidget {

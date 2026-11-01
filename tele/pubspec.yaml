@@ -43,50 +43,60 @@ dependencies:
   google_fonts: ^6.2.1
   url_launcher: ^6.3.1
   get: ^4.7.2
-  flutter_dotenv: ^5.2.1
+  flutter_dotenv: ^6.0.1
   shared_preferences: ^2.5.2
   http: ^1.3.0
   toastification: ^3.0.2
   dart_jsonwebtoken: ^3.1.1
   cached_network_image: ^3.4.1
   lottie: ^3.3.1
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
   local_auth: ^2.3.0
   internet_connection_checker: ^3.0.1
-  zego_uikit_prebuilt_call: ^4.16.27
-  zego_uikit_signaling_plugin: ^2.8.11
-  firebase_core: ^3.13.0
-  firebase_messaging: ^15.2.5
-  googleapis_auth: ^2.0.0
-  flutter_callkit_incoming_yoer: ^2.0.4+3
-  # flutter_callkit_incoming: ^2.5.2
+  zego_uikit_prebuilt_call: ^4.24.5
+  zego_uikit_signaling_plugin: ^2.8.22
+  firebase_core: ^5.1.0
+  firebase_messaging: ^17.0.1
+  flutter_callkit_incoming: 3.0.0
   uuid: ^4.5.1
-  flutter_local_notifications: ^19.1.0
+  flutter_local_notifications: ^20.1.0
   printing: ^5.14.2
   pdf: ^3.11.3
   path_provider: ^2.1.5
   open_file: ^3.5.10
-  permission_handler: ^11.3.1
-  share_plus: ^11.0.0
+  permission_handler: ^12.0.3
+  share_plus: ^12.0.2
   image_picker: ^1.1.2
   carousel_slider: ^5.1.1
   easy_localization: ^3.0.8
+  zego_uikit: ^2.29.3
+  flutter_ringtone_player: ^4.0.0+4
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.7
   flutter_test:
     sdk: flutter
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/app_icon2.jpg"
+  remove_alpha_ios: true
+  image_path: "assets/branding/app_icon.png"
+  # Android 8+ adaptive icon (round / squircle launchers)
+  adaptive_icon_foreground: "assets/branding/app_icon_foreground.png"
+  adaptive_icon_background: "assets/branding/app_icon_background.png"
+  min_sdk_android: 26
 
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
-  flutter_lints: ^5.0.0
+# Branded launch screen (replaces the white screen while the app starts)
+flutter_native_splash:
+  color: "#09820D"
+  image: assets/branding/splash_logo.png
+  android_12:
+    color: "#09820D"
+    image: assets/branding/splash_logo_android12.png
+    icon_background_color: "#09820D"
+  ios: true
+  web: false
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -100,6 +110,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/branding/splash_logo.png
     - .env
     - assets/
     - assets/animations/

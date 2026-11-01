@@ -11,8 +11,7 @@
 // import 'package:tele/controllers/doctor_transection_controller.dart';
 // import 'package:tele/routes/app_routes.dart';
 // import 'package:tele/services/StorageService.dart';
-// import 'package:tele/services/access_token_service.dart';
-// import 'package:tele/services/firebase_notification_handler.dart';
+// // import 'package:tele/services/firebase_notification_handler.dart';
 // import 'package:tele/services/notification_service.dart';
 // import 'package:tele/services/notification_debug_helper.dart';
 // import 'package:tele/services/get_api_services.dart';
@@ -244,34 +243,46 @@ import 'package:get/get.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:tele/controllers/user_Controller.dart';
-import 'package:tele/controllers/internet_controller.dart';
 import 'package:tele/controllers/doctor_transection_controller.dart';
 import 'package:tele/controllers/language_controller.dart';
 import 'package:tele/routes/app_routes.dart';
 import 'package:tele/services/StorageService.dart';
-import 'package:tele/services/access_token_service.dart';
 import 'package:tele/services/get_api_services.dart';
 import 'package:tele/services/firebase_notification_handler.dart';
 import 'package:tele/services/background_message_handler.dart';
 import 'package:tele/views/screens/CallPage/firebase_api.dart';
 import 'package:tele/views/screens/components/config.dart';
+import 'package:tele/views/screens/CallPage/call_helpers.dart';
+import 'package:tele/theme/app_theme.dart';
+import 'dart:io';
 import 'package:toastification/toastification.dart';
 // import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 // ignore: depend_on_referenced_packages
 import 'package:zego_uikit/zego_uikit.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+/// Every HTTP request in the app gives up connecting after 8 seconds, so screens
+/// show an error quickly instead of staying blank when the server is off/unreachable.
+class _AppHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) => super.createHttpClient(context)
+    ..connectionTimeout = const Duration(seconds: 8)
+    ..idleTimeout = const Duration(seconds: 15);
+}
+
 Future<void> main() async {
+  HttpOverrides.global = _AppHttpOverrides();
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
-  await Firebase.initializeApp(
-    options: FirebaseOptions(
-      apiKey: Config.firebaseapkey,
-      appId: Config.firebaseappid,
-      messagingSenderId: Config.firebasemessagingsenderid,
-      projectId: Config.firebaseprojectid,
-    ),
-  );
+  await Config.ensureLoaded();
+  // Push notifications must never stop the app from opening, so every
+  // Firebase step below is allowed to fail (e.g. no Google Play services).
+  bool firebaseReady = false;
+  try {
+    await Firebase.initializeApp(options: Config.firebaseOptions);
+    firebaseReady = true;
+  } catch (e) {
+    debugPrint('⚠️ Firebase init failed: $e');
+  }
   const AndroidNotificationChannel callChannel = AndroidNotificationChannel(
     'call_channel',
     'Call Notifications',
@@ -294,36 +305,25 @@ Future<void> main() async {
       .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(defaultChannel);
-  final accessToken = await AccessTokenService().getAccessToken();
-  final token = await FirebaseMessaging.instance.getToken();
-  if (accessToken == null) {
-    print("Failed to get access token.");
-    return;
-  }
-  print("Your accessToken: $accessToken");
-  print("Your FCM token: $token");
   Get.put(UserController());
   Get.put(DoctorTransectionController());
   // Get.put(InternetController(), permanent: true);
   Get.put(LanguageController(), permanent: true);
-  FirebaseMessaging.onBackgroundMessage(handleBackgroundMessage);
-  await FirebaseNotification().initNotification();
+  if (firebaseReady) {
+    FirebaseMessaging.onBackgroundMessage(handleBackgroundMessage);
+  }
   ZegoUIKit().init(appID: Config.appId, appSign: Config.appSign);
   Map<String, String?> userData = await StorageService.getUserData();
   final userId = userData["userId"];
-  if (userId != null) {
-    await ApiGetServices.updateFcmToken(userId);
-  }
-  FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
-    final userData = await StorageService.getUserData();
-    final userId = userData["userId"];
-    if (userId != null) {
-      await ApiGetServices.updateFcmToken(userId);
+  RemoteMessage? initialMessage;
+  if (firebaseReady) {
+    try {
+      // Local lookup (no network), but never let it hold up the first frame
+      initialMessage = await FirebaseMessaging.instance.getInitialMessage().timeout(const Duration(seconds: 2));
+    } catch (e) {
+      debugPrint('⚠️ getInitialMessage: $e');
     }
-  });
-
-  RemoteMessage? initialMessage =
-      await FirebaseMessaging.instance.getInitialMessage();
+  }
 
   // // Clear old EasyLocalization cache to fix locale issues
   // final prefs = await SharedPreferences.getInstance();
@@ -348,6 +348,28 @@ Future<void> main() async {
       ),
     ),
   );
+
+  // Everything that may wait on the network or on the user (permission prompt)
+  // runs after the app is on screen, so it never causes a blank start.
+  if (firebaseReady) _setUpPushInBackground(userId);
+}
+
+Future<void> _setUpPushInBackground(String? userId) async {
+  try {
+    await FirebaseNotification().initNotification().timeout(const Duration(seconds: 20));
+  } catch (e) {
+    debugPrint('⚠️ Notification setup failed: $e');
+  }
+  if (userId != null) {
+    ApiGetServices.updateFcmToken(userId).catchError((e) => debugPrint('⚠️ updateFcmToken: $e'));
+  }
+  FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+    final userData = await StorageService.getUserData();
+    final id = userData["userId"];
+    if (id != null) {
+      await ApiGetServices.updateFcmToken(id).catchError((e) => debugPrint('⚠️ updateFcmToken: $e'));
+    }
+  }, onError: (e) => debugPrint('⚠️ onTokenRefresh: $e'));
 }
 
 // class MyApp extends StatefulWidget {
@@ -449,8 +471,20 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Incoming call accepted while the app was closed -> join it now
+      await openAcceptedCallIfAny();
+
+      // Calls ring inside the open app even when push notifications don't work
+      startIncomingCallPoller();
+
       final handler = FirebaseNotificationHandler(navigatorKey);
       await handler.initNotification();
+
+      // Android 14+: allow incoming calls to show on the lock screen / when the app is closed
+      if ((await _isLoggedIn()) != null) {
+        await Future.delayed(const Duration(seconds: 2));
+        await ensureFullScreenCallPermission();
+      }
 
       if (widget.initialMessage != null) {
         // Ensure widget is still in tree before using context
@@ -474,12 +508,23 @@ class _MyAppState extends State<MyApp> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light,
+            // Same look as the native splash, so the start is seamless (no white flash)
             home: Scaffold(
+              backgroundColor: AppColors.brand,
               body: Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    const Color.fromARGB(255, 9, 130, 13),
-                  ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset('assets/branding/splash_logo.png', width: 180, height: 180),
+                    const SizedBox(height: 8),
+                    const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -497,6 +542,7 @@ class _MyAppState extends State<MyApp> {
         return GetMaterialApp(
           navigatorKey: navigatorKey,
           debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
           initialRoute: initialRoute,
           getPages: AppRoutes.routes,
           localizationsDelegates: [

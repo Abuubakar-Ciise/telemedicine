@@ -3,14 +3,10 @@ import 'package:get/get.dart' hide Trans;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:intl/intl.dart';
 import 'package:tele/Models/shift_model.dart';
-import 'package:tele/controllers/doctor_appointment_controller.dart';
 import 'package:tele/controllers/re_appointment_controller.dart';
 import 'package:tele/controllers/shift_controller.dart';
 import 'package:tele/services/get_api_services.dart';
-import 'package:tele/services/new_firebase_send_message.dart';
-import 'package:tele/views/screens/DoctorScreens/conseltaion_screen.dart';
 import 'package:tele/views/screens/loading_message_screen.dart';
-import 'package:tele/views/screens/patient/PatientDetailsScreen.dart';
 import 'package:toastification/toastification.dart';
 import 'package:tele/services/StorageService.dart';
 
@@ -136,7 +132,7 @@ class _ReAppointmentScreenState extends State<ReAppointmentScreen> {
         title: Text('Error'.tr()),
         description: Text(test['message']),
         autoCloseDuration: const Duration(seconds: 3),
-        // animationDuration: const Duration(microseconds: 300),
+        // animationDuration: const Duration(milliseconds: 300),
         alignment: Alignment.topRight,
         showProgressBar: true,
       );

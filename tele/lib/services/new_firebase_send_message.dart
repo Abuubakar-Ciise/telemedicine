@@ -346,7 +346,6 @@
 // }
 
 import 'dart:convert';
-import 'package:tele/services/access_token_service.dart';
 import 'package:tele/views/screens/components/config.dart';
 import 'package:http/http.dart' as http;
 
@@ -357,11 +356,9 @@ class NewFirebaseSendMessage {
     required String title,
     required String body,
   }) async {
-    final accessToken = await AccessTokenService().getAccessToken();
-    final projectId = Config.firebaseprojectid;
 
     final url = Uri.parse(
-      'https://fcm.googleapis.com/v1/projects/$projectId/messages:send',
+      '${Config.baseUrl}/send_push',
     );
 
     final payload = {
@@ -386,7 +383,6 @@ class NewFirebaseSendMessage {
       url,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
       },
       body: jsonEncode(payload),
     );

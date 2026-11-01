@@ -1,7 +1,6 @@
 
 
 import 'package:get/get.dart';
-import 'package:tele/DoctorPrescriptionScreen.dart';
 import 'package:tele/PrescriptionScreen.dart';
 import 'package:tele/views/screens/DoctorScreens/conseltaion_screen.dart';
 import 'package:tele/views/screens/DoctorScreens/doctor_home_screen.dart';

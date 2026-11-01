@@ -24,7 +24,7 @@ class ReviewsController extends GetxController{
         title: Text(response['success'] ? 'Success' : 'error'),
         description: Text(response['message']),
         autoCloseDuration: const Duration(seconds: 3),
-        // animationDuration: const Duration(microseconds: 300),
+        // animationDuration: const Duration(milliseconds: 300),
         alignment: Alignment.topRight,
         showProgressBar: true,
       );

@@ -1,8 +1,8 @@
 // import 'package:firebase_core/firebase_core.dart';
 // import 'package:firebase_messaging/firebase_messaging.dart';
 // import 'package:flutter/material.dart';
-// import 'package:flutter_callkit_incoming_yoer/entities/entities.dart';
-// import 'package:flutter_callkit_incoming_yoer/flutter_callkit_incoming.dart';
+// import 'package:flutter_callkit_incoming/entities/entities.dart';
+// import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 // import 'package:tele/main.dart';
 // import 'package:tele/services/firebase_api.dart';
 // import 'package:tele/views/screens/CallPage/call_page.dart';
@@ -35,7 +35,7 @@
 //     );
 //   } else if (data['type'] == 'call_end') {
 //     await CallKitService.endAllCalls(
-//       data['doctor_id'] ?? '', 
+//       data['doctor_id'] ?? '',
 //       data['patient_id'] ?? '',
 //       callId: data['call_id'] ?? '',
 //     );
@@ -100,7 +100,7 @@
 //     final callerToken = event.body['extra']?['callerToken'];
 //     final doctorId = event.body['extra']?['doctor_id'] ?? '';
 //     final patientId = event.body['extra']?['patient_id'] ?? '';
-    
+
 //     if (callerToken != null) {
 //       FirebaseApis().sendCallAcceptedFCM(callerToken, doctorId, patientId);
 //     }
@@ -120,9 +120,9 @@
 //     if (callerToken != null && calleeToken != null) {
 //       try {
 //         await FirebaseApis().sendCallEndToBothFCM(
-//           callerToken, 
-//           calleeToken, 
-//           doctorId, 
+//           callerToken,
+//           calleeToken,
+//           doctorId,
 //           patientId,
 //           callId,
 //         );
@@ -144,9 +144,9 @@
 //     if (callerToken != null && calleeToken != null && CallKitService.isIncoming) {
 //       try {
 //         await FirebaseApis().sendCallEndToBothFCM(
-//           callerToken, 
-//           calleeToken, 
-//           doctorId, 
+//           callerToken,
+//           calleeToken,
+//           doctorId,
 //           patientId,
 //           callId,
 //         );
@@ -166,8 +166,8 @@
 
 //     if (calleeToken != null) {
 //       await FirebaseApis().sendCallEndFCM(
-//         calleeToken, 
-//         doctorId, 
+//         calleeToken,
+//         doctorId,
 //         patientId,
 //         callId,
 //       );
@@ -192,7 +192,7 @@
 //       );
 //     } else if (data['type'] == 'call_end') {
 //       CallKitService.endAllCalls(
-//         data['doctor_id'] ?? '', 
+//         data['doctor_id'] ?? '',
 //         data['patient_id'] ?? '',
 //         callId: data['call_id'] ?? '',
 //       );
@@ -208,7 +208,7 @@
 
 //   void _navigateToCallScreen(String roomId, String callType) {
 //     WidgetsBinding.instance.addPostFrameCallback((_) {
-//       CallKitService.setCallAccepted(); 
+//       CallKitService.setCallAccepted();
 //       navigatorKey.currentState?.push(
 //         MaterialPageRoute(
 //           builder: (_) => CallPage(callId: roomId, callType: callType),
@@ -218,16 +218,17 @@
 //   }
 // }
 
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_callkit_incoming_yoer/entities/entities.dart';
-import 'package:flutter_callkit_incoming_yoer/flutter_callkit_incoming.dart';
+import 'package:flutter_callkit_incoming/entities/entities.dart';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:tele/main.dart';
 import 'package:tele/services/firebase_api.dart';
 import 'package:tele/views/screens/CallPage/call_page.dart';
 import 'package:tele/views/screens/CallPage/callkit_service.dart';
-import 'package:tele/views/screens/components/config.dart';
+import 'package:tele/views/screens/CallPage/call_helpers.dart';
+import 'package:tele/services/call_session.dart';
+import 'package:tele/views/screens/CallPage/incoming_call_page.dart';
 
 // Background message handler is now handled in main.dart
 // This duplicate handler has been removed to avoid conflicts
@@ -265,6 +266,13 @@ class FirebaseNotification {
           await _handleCallDecline(event!);
           break;
 
+        case Event.actionCallTimeout:
+          // Unanswered call rang out: reset so the next call is not ignored
+          CallSession.update(
+              (event?.body['extra']?['roomId'] ?? '').toString(), 'missed');
+          CallKitService.clearCallId();
+          break;
+
         case Event.actionCallEnded:
           if (isCaller) {
             await _handleCallerCancellation(event!);
@@ -288,36 +296,36 @@ class FirebaseNotification {
     final callerToken = event.body['extra']?['callerToken'];
     final doctorId = event.body['extra']?['doctor_id'] ?? '';
     final patientId = event.body['extra']?['patient_id'] ?? '';
-    
+
     if (callerToken != null) {
       FirebaseApis().sendCallAcceptedFCM(callerToken, doctorId, patientId);
     }
 
     if (roomId != null && callType != null) {
-      _navigateToCallScreen(roomId, callType);
+      CallKitService.setCallAccepted();
+      openCallScreen(Map<String, dynamic>.from(event.body['extra'] ?? {})
+        ..putIfAbsent('callerName', () => event.body['nameCaller'] ?? ''));
     }
   }
 
   Future<void> _handleCallDecline(CallEvent event) async {
-    final callerToken = event.body['extra']?['callerToken'];
-    final calleeToken = event.body['extra']?['calleeToken'];
     final doctorId = event.body['extra']?['doctor_id'] ?? '';
     final patientId = event.body['extra']?['patient_id'] ?? '';
     final callId = event.body['id'];
 
-    if (callerToken != null && calleeToken != null) {
-      try {
-        await FirebaseApis().sendCallEndToBothFCM(
-          callerToken, 
-          calleeToken, 
-          doctorId, 
-          patientId,
-          callId,
-        );
-      } catch (e) {
-        print("Error sending decline FCM to both: $e");
-      }
-    }
+    // Record it on the server: the caller's screen checks this every 2 s
+    CallSession.update(
+        (event.body['extra']?['roomId'] ?? '').toString(), 'declined');
+    // Tell the caller (looked up by account id, so a stale token doesn't matter)
+    final callerType =
+        (event.body['extra']?['callerType'] ?? 'doctor').toString();
+    await FirebaseApis().sendCallEndTo(
+      toType: callerType,
+      toId: callerType == 'doctor' ? doctorId : patientId,
+      doctorId: doctorId,
+      patientId: patientId,
+      roomId: (event.body['extra']?['roomId'] ?? '').toString(),
+    );
 
     await CallKitService.endAllCalls(doctorId, patientId, callId: callId);
   }
@@ -329,12 +337,14 @@ class FirebaseNotification {
     final patientId = event.body['extra']?['patient_id'] ?? '';
     final callId = event.body['id'];
 
-    if (callerToken != null && calleeToken != null && CallKitService.isIncoming) {
+    if (callerToken != null &&
+        calleeToken != null &&
+        CallKitService.isIncoming) {
       try {
         await FirebaseApis().sendCallEndToBothFCM(
-          callerToken, 
-          calleeToken, 
-          doctorId, 
+          callerToken,
+          calleeToken,
+          doctorId,
           patientId,
           callId,
         );
@@ -354,8 +364,8 @@ class FirebaseNotification {
 
     if (calleeToken != null) {
       await FirebaseApis().sendCallEndFCM(
-        calleeToken, 
-        doctorId, 
+        calleeToken,
+        doctorId,
         patientId,
         callId,
       );
@@ -366,25 +376,26 @@ class FirebaseNotification {
   void _handleMessage(RemoteMessage message) {
     final data = message.data;
     print('🔔 Foreground message received: ${data['type']}');
-    
-    if (data['type'] == 'call_invitation' && !CallKitService.isCallActive) {
-      print('🔔 Showing foreground CallKit for call invitation');
-      CallKitService.showCallkit(
-        data['callerName'],
-        data['roomId'],
-        data['picture'],
-        data['callerToken'],
-        data['calleeToken'],
-        data['callerPhone'],
-        data['callType'],
-        data['doctor_id'] ?? '',
-        data['patient_id'] ?? '',
-        isIncoming: true,
+
+    if (data['type'] == 'call_invitation') {
+      // App is open: show our own full-screen incoming call (system pop-ups are
+      // often blocked on MIUI / ColorOS). Ignore if already ringing or in a call.
+      if (IncomingCallPage.isShowing || CallPage.openCount > 0) {
+        print('🔔 Busy: ignoring call invitation ${data['roomId']}');
+        return;
+      }
+      print('🔔 Showing in-app incoming call');
+      markIncomingCallShown((data['roomId'] ?? '').toString());
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+            builder: (_) =>
+                IncomingCallPage(data: Map<String, dynamic>.from(data))),
       );
     } else if (data['type'] == 'call_end') {
       print('🔔 Handling foreground call end');
+      IncomingCallPage.dismiss(roomId: data['roomId']);
       CallKitService.endAllCalls(
-        data['doctor_id'] ?? '', 
+        data['doctor_id'] ?? '',
         data['patient_id'] ?? '',
         callId: data['call_id'] ?? '',
       );
@@ -401,7 +412,7 @@ class FirebaseNotification {
 
   void _navigateToCallScreen(String roomId, String callType) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      CallKitService.setCallAccepted(); 
+      CallKitService.setCallAccepted();
       navigatorKey.currentState?.push(
         MaterialPageRoute(
           builder: (_) => CallPage(callId: roomId, callType: callType),

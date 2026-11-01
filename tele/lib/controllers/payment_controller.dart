@@ -1,9 +1,6 @@
-import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:tele/services/evs_plus_services.dart';
 import 'package:tele/services/post_api_services.dart';
-import 'package:tele/views/screens/main_screen.dart';
-import 'package:toastification/toastification.dart';
 
 class PaymentController extends GetxController {
   var isLoading = false.obs;
@@ -54,7 +51,9 @@ class PaymentController extends GetxController {
 
   ///
   ///
-  Future<void> bookAndPayController(
+  /// Saves the payment and the appointment on the server.
+  /// Returns {success, message}; the caller decides where to navigate.
+  Future<Map<String, dynamic>> bookAndPayController(
       String doctorId,
       String patientId,
       String shiftsId,
@@ -67,31 +66,12 @@ class PaymentController extends GetxController {
       isLoading.value = true;
       final response = await ApiPostServices().bookAndPay(doctorId, patientId,
           shiftsId, senderPhone, reciverPhone, amount, appointmentDate, reason);
-      // if(response['success']) {
-      // }
-      toastification.show(
-        type: response['success']
-            ? ToastificationType.success
-            : ToastificationType.error,
-        style: ToastificationStyle.flat,
-        title: Text(response['success'] ? 'Success' : 'Hmmmmm'),
-        description: Text(response['message']),
-        autoCloseDuration: const Duration(seconds: 3),
-        // animationDuration: const Duration(microseconds: 300),
-        alignment: Alignment.topRight,
-        showProgressBar: true,
-      );
-      Get.offAll(() => MainScreen());
+      return {
+        'success': response['success'] == true,
+        'message': response['message'] ?? 'Unknown response from server',
+      };
     } catch (e) {
-      toastification.show(
-        type: ToastificationType.error, // Fixing incorrect toast type
-        style: ToastificationStyle.flat,
-        title: Text('Error'), // Fixed incorrect conditional syntax
-        description: Text(e.toString()), // Displaying the caught exception
-        autoCloseDuration: const Duration(seconds: 3),
-        alignment: Alignment.topRight,
-        showProgressBar: true,
-      );
+      return {'success': false, 'message': 'Booking failed: $e'};
     } finally {
       isLoading.value = false;
     }

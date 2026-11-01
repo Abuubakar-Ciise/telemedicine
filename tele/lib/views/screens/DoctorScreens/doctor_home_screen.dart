@@ -1,23 +1,18 @@
 import 'dart:async';
 
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide Trans;
 import 'package:easy_localization/easy_localization.dart';
-import 'package:tele/DoctorPrescriptionScreen.dart';
-import 'package:tele/PrescriptionScreen.dart';
 import 'package:tele/controllers/adds_controller.dart';
 import 'package:tele/controllers/doctor_appointment_controller.dart';
 import 'package:tele/services/StorageService.dart';
 import 'package:tele/views/screens/DoctorScreens/conseltaion_screen.dart';
 import 'package:tele/views/screens/DoctorScreens/doctor_appointment_screen.dart';
 import 'package:tele/views/screens/DoctorScreens/doctor_profile_Screen.dart';
-import 'package:tele/views/screens/Hospitals/HospitalListScreen.dart';
 import 'package:tele/views/screens/components/adds_screen.dart';
 import 'package:tele/views/screens/components/config.dart';
 import 'package:tele/views/screens/components/reusable.card.dart';
 import 'package:tele/views/screens/loading_message_screen.dart';
-import 'package:tele/views/screens/patient/Video_Consultation_Screen.dart';
 import 'package:tele/views/screens/selfManagement.dart';
 
 class DoctorHomeScreen extends StatefulWidget {

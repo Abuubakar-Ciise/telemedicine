@@ -8,7 +8,7 @@ import 'package:tele/views/screens/components/config.dart';
 
 class AuthServices {
 
-  static final url = Config.baseUrl;
+  static String get url => Config.baseUrl;
 
   // register Patient
   static Future<Map<String, dynamic>> registerPatient(
@@ -49,7 +49,7 @@ class AuthServices {
       }
     } catch (e) {
       print("Registration failed: $e");
-      return {"success": false, "message": "Failed to connect to server"};
+      return {"success": false, "message": "Cannot reach the server at ${Config.baseUrl}. Check Server settings on the login screen."};
     }
   }
 
@@ -109,7 +109,7 @@ class AuthServices {
       }
     } catch (e) {
       print("Login failed: $e");
-      return {"success": false, "message": "Server connection failed."};
+      return {"success": false, "message": "Cannot reach the server at ${Config.baseUrl}. Check Server settings on the login screen."};
     }
   }
 

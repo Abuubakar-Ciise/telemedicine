@@ -1,4 +1,4 @@
-package com.example.tele
+package com.example.telemedicine
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

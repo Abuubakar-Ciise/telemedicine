@@ -363,7 +363,7 @@ class FirebaseNotificationHandler {
     const initSettings = InitializationSettings(android: androidSettings);
 
     await _localNotificationsPlugin.initialize(
-      initSettings,
+      settings: initSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) async {
         await NotificationDebugHelper.logNotificationEvent(
           'Local notification tapped',
@@ -497,10 +497,10 @@ class FirebaseNotificationHandler {
     print("Payload: $payload");
 
     await _localNotificationsPlugin.show(
-      notificationId,
-      title,
-      body,
-      platformDetails,
+      id: notificationId,
+      title: title,
+      body: body,
+      notificationDetails: platformDetails,
       payload: payload,
     );
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_state_manager/get_state_manager.dart';
+import 'package:tele/services/username_helper.dart';
+import 'package:get/get.dart' hide Trans;
 import 'package:get/instance_manager.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:tele/controllers/auth_controller.dart';
@@ -15,7 +16,6 @@ class RegisterScreen extends StatelessWidget {
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -130,9 +130,6 @@ class RegisterScreen extends StatelessWidget {
                           // Other Fields
                           buildAgeField(Icons.cake, "age".tr(), _ageController),
 
-                          buildTextField(Icons.account_circle, "username".tr(),
-                              _usernameController),
-
                           // buildPasswordField("Password", _passwordController),
                           // buildConfirmPasswordField("Confirm Password", _confirmPasswordController),
                           PasswordField(
@@ -153,8 +150,9 @@ class RegisterScreen extends StatelessWidget {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor:
                                           const Color.fromARGB(255, 9, 130, 13),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 130, vertical: 15),
+                                      // Full-width button that fits any screen size
+                                      minimumSize: const Size(double.infinity, 52),
+                                      padding: const EdgeInsets.symmetric(vertical: 15),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
@@ -166,12 +164,6 @@ class RegisterScreen extends StatelessWidget {
                                       String fullPhoneNumber =
                                           "+252${_phoneController.text.trim()}";
                                       if (_formKey.currentState!.validate()) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                              content: Text(
-                                                  "registration_successful".tr())),
-                                        );
                                         await authController.registerPatient(
                                           _fullNameController.text.trim(),
                                           _emailController.text.trim(),
@@ -179,7 +171,7 @@ class RegisterScreen extends StatelessWidget {
                                           _genderController.text.trim(),
                                           age,
                                           fullPhoneNumber,
-                                          _usernameController.text.trim(),
+                                          generateUsername(_fullNameController.text),
                                           _passwordController.text.trim(),
                                         );
                                       }
@@ -201,11 +193,11 @@ class RegisterScreen extends StatelessWidget {
                               Text("already_have_account".tr()),
                               TextButton(
                                 onPressed: () {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => LoginScreen()),
-                                  );
+                                  if (Navigator.canPop(context)) {
+                                    Navigator.pop(context);
+                                  } else {
+                                    Get.offAll(() => LoginScreen());
+                                  }
                                 },
                                 child: Text(
                                   "sign_in".tr(),
@@ -225,7 +217,7 @@ class RegisterScreen extends StatelessWidget {
                               Text("Sign Up As Doctor".tr()),
                               TextButton(
                                 onPressed: () {
-                                  Navigator.pushReplacement(
+                                  Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                         builder: (context) => RegisterDoctorScreen()),

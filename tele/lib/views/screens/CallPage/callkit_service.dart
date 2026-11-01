@@ -1,9 +1,11 @@
-// import 'package:flutter_callkit_incoming_yoer/entities/entities.dart';
-// import 'package:flutter_callkit_incoming_yoer/flutter_callkit_incoming.dart';
+// import 'package:flutter_callkit_incoming/entities/entities.dart';
+// import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 // import 'package:tele/services/StorageService.dart';
 // import 'package:tele/views/screens/components/config.dart';
 // import 'package:tele/views/screens/patient/ReviewsScreen.dart';
 // import 'package:uuid/uuid.dart';
+import 'package:tele/views/screens/CallPage/call_helpers.dart';
+import 'package:tele/views/screens/CallPage/call_page.dart';
 // import 'package:flutter/material.dart';
 // import 'package:tele/main.dart';
 
@@ -26,7 +28,7 @@
 //     String calleeToken,
 //     String callerPhone,
 //     String callType,
-//     String doctorId, 
+//     String doctorId,
 //     String patientId,
 //     {bool isIncoming = true, bool isCaller = false}
 //   ) async {
@@ -70,7 +72,7 @@
 //   }
 
 //   // static Future<void> endAllCalls(
-//   //   String doctorId, 
+//   //   String doctorId,
 //   //   String patientId, {
 //   //   String callId = '',
 //   // }) async {
@@ -114,7 +116,7 @@
 //   //   }
 //   // }
 //  static Future<void> endAllCalls(
-//   String doctorId, 
+//   String doctorId,
 //   String patientId, {
 //   String callId = '',
 // }) async {
@@ -162,7 +164,6 @@
 //   }
 // }
 
-
 //   static void _resetCallState() {
 //     _activeCallId = null;
 //     _isCallActive = false;
@@ -178,13 +179,11 @@
 //   static bool get isCallActive => _isCallActive;
 //   static bool get isIncoming => _isIncoming;
 // }
-import 'package:flutter/material.dart';
-import 'package:flutter_callkit_incoming_yoer/entities/entities.dart';
-import 'package:flutter_callkit_incoming_yoer/flutter_callkit_incoming.dart';
+import 'package:flutter_callkit_incoming/entities/entities.dart';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:tele/services/StorageService.dart';
 import 'package:tele/services/background_call_handler.dart';
 import 'package:tele/views/screens/components/config.dart';
-import 'package:tele/views/screens/patient/ReviewsScreen.dart';
 import 'package:tele/main.dart';
 import 'package:uuid/uuid.dart';
 
@@ -193,9 +192,10 @@ class CallKitService {
   static bool _isCallActive = false;
   static bool _isIncoming = false;
   static bool _callAccepted = false;
-  static String? url = Config.baseUrl;
+  static String? get url => Config.baseUrl;
 
-  static bool get isCallActive => _isCallActive || BackgroundCallHandler.isCallActive;
+  static bool get isCallActive =>
+      _isCallActive || BackgroundCallHandler.isCallActive;
   static bool get isIncoming => _isIncoming;
 
   static void setCallAccepted() {
@@ -226,6 +226,7 @@ class CallKitService {
     String patientId, {
     bool isIncoming = true,
     bool isCaller = false,
+    String callerType = 'doctor',
   }) async {
     if (_activeCallId != null && _isCallActive) return;
 
@@ -235,29 +236,23 @@ class CallKitService {
     _isIncoming = isIncoming;
     _callAccepted = false;
 
-    final avatarUrl = picture.startsWith('http') ? picture : '$url/$picture';
-
-    final params = CallKitParams(
+    final params = buildIncomingCallParams(
       id: uuid,
-      nameCaller: callerName,
-      appName: 'Tayo healthcare',
-      avatar: avatarUrl,
-      handle: callerPhone,
-      type: int.tryParse(callType) ?? 0,
-      duration: 30000,
-      textAccept: 'Accept',
-      textDecline: 'Decline',
+      callerName: callerName,
+      picture: picture,
+      callerPhone: callerPhone,
+      callType: callType,
       extra: {
         'roomId': roomId,
         'callerToken': callerToken,
         'calleeToken': calleeToken,
         'callType': callType,
+        'callerType': callerType,
         'doctor_id': doctorId,
         'patient_id': patientId,
         'isIncoming': isIncoming.toString(),
         'isCaller': isCaller.toString(),
       },
-      headers: <String, dynamic>{'apiKey': 'Abc@123'},
     );
 
     await FlutterCallkitIncoming.showCallkitIncoming(params);
@@ -278,14 +273,15 @@ class CallKitService {
       _isCallActive = false;
 
       final userData = await StorageService.getUserData();
-      final shouldShowReview = _callAccepted &&
-          _isIncoming &&
-          userData['userType'] == '1';
+      final shouldShowReview =
+          _callAccepted && _isIncoming && userData['userType'] == '1';
 
       final navigator = navigatorKey.currentState;
       final context = navigator?.overlay?.context;
 
-      if (navigator?.canPop() ?? false) navigator?.pop();
+      // Only close the call screen (if one is open) - never another screen.
+      // End the open call properly (a plain pop would leave the Zego room running)
+      if (CallPage.openCount > 0) CallPage.endActive('Call ended');
 
       if (shouldShowReview && context != null) {
         Future.delayed(const Duration(milliseconds: 300), () {

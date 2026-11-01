@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:tele/views/screens/components/config.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tele/Models/doctors_list_nodel.dart';
 
@@ -13,8 +13,7 @@ class DoctorProfileScreen extends StatefulWidget {
 }
 
 class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
-  static final String baseUrl =
-      dotenv.env['BASE_URL'] ?? 'http://localhost:5000';
+  String get baseUrl => Config.baseUrl;
 
   @override
   Widget build(BuildContext context) {

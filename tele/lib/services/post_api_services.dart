@@ -1,12 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:get/get_connect/http/src/request/request.dart';
 import 'package:http/http.dart' as http;
 import 'package:tele/views/screens/components/config.dart';
 
 class ApiPostServices {
-  static final url = Config.baseUrl;
+  static String get url => Config.baseUrl;
 
   Future<Map<String, dynamic>> bookAndPay(
       String doctorId,
